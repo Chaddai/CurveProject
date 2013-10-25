@@ -1,0 +1,54 @@
+.header     { text-align: right;
+                display: block;
+                padding: 1mm;
+                vertical-align: middle;
+	    }
+.vheader     { text-align: center;
+                display: block;
+                padding: 1mm;
+                vertical-align: middle;
+	    }
+.coords      { width: 0.7cm;
+                padding: 1mm;
+		vertical-align: middle;
+	     }
+.params      { width: 377px; 
+	       float:left;
+	     }
+.control     { // width: 75%; 
+	       float:left; 
+	       padding: 2mm; 
+	     }
+.firstPart   { width: 100%; 
+	       float:left; 
+	       padding: 2mm; 
+	       border: 0.5pt; 
+	       border-style: solid
+	     }
+.secondPart  { width: 100%; 
+	       float:left;
+	     }
+.panel       { padding: 2mm; 
+	       border: 0.5pt; border-style: solid; 
+	       text-align: left;
+	     }
+.table       { display:table;
+	       margin: auto; 
+	     }
+.outputs     { padding: 1mm;
+	       border: 0.5pt; border-style: solid; 
+	     }
+.tableTitleDiv { float:left; }
+.tableDiv      { float:left; }
+body         { background: lightgrey; padding:0.5mm;}
+svg          { background: white; padding: 1mm; }
+a.svgLink    { text-decoration: none; }
+textarea     { width:361px;}
+
+.toggleCollapse 
+             { font-weight: bolder;
+	       cursor: pointer;
+	       margin-right: 1.5mm;
+	     }
+
+h1 {margin:0mm 0mm 2mm 0mm; color: grey;}
