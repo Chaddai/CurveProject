@@ -1,0 +1,1 @@
+ghc -odir ../../manualDist/ -hidir ../../manualDist/ -o ../../manualDist/bin/CurveProject.exe -O2 --make Main.hs -package-db ../../.cabal-sandbox/i386-windows-ghc-7.6.3-packages.conf.d/ ; cp ../css/*.css ../../manualDist/bin/css
