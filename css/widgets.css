@@ -1,0 +1,56 @@
+/* styles for Widgets.hs (may be reused) */
+
+/* collapsiblePanel */
+.toggleCollapse { 
+    font-weight: bolder;
+    cursor: pointer;
+    margin-right: 1.5mm;
+    text-shadow:
+}
+
+/* tabbedView */
+div.tabbedContainer {
+    padding:0
+    margin:0
+}
+
+ol.tabs { 
+    list-style:none
+    ;margin:0
+    ;padding:0
+}
+
+li.tab {
+    padding:3px  
+    ;display:inline-block
+    ;border-style:solid 
+    ;border-radius:5px 5px 0 0
+    ;cursor:pointer
+    ;text-align:center
+}
+
+li.activeTab {
+    margin:0px 1px 0px 1px
+    ;border-width:1px 1px 0 1px
+    ;background-color: lightgray
+    ;box-shadow: 2px -2px 5px #aaa
+    ;transform: translate(0px,2px)
+    ;-ms-transform: translate(0px,2px) /* IE 9 */
+    ;-webkit-transform: translate(0px,2px)
+}
+
+li.inactiveTab {
+    margin:0px 1px
+    ;border-width: 1px
+    ;background-color: gray
+    ;box-shadow: 1px -1px 5px #999
+}
+
+div.tabContent {
+    display:block
+    ;width:100%
+    ;padding:0
+    ;margin:0
+    ;border-style:solid
+    ;border-width:1px 1px 1px 1px
+}

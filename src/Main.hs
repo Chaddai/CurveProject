@@ -46,6 +46,7 @@ setup home w = void $ do
     debug w "In the looking glass"
     return w # set title "Générateur de courbe point par point"
     UI.addStyleSheet w "style.css"
+    UI.addStyleSheet w "widgets.css"
 
     let autosave =  home </> "autosave.session"
     b <- doesFileExist $ autosave
@@ -57,37 +58,30 @@ setup home w = void $ do
 
     restoreAll config
 
-    let firstPart =
-          UI.div #. "firstPart" #+ [
-            UI.div #. "tableTitleDiv" #+ [
-               UI.h2 # set text "Tableau des points"
-               ,UI.p # set text "Les points peuvent être entrés en désordre."
-               ]
-            ,UI.div #. "tableDiv" #+ [
-               grid . transpose $
-                 [header "#", header "x", header "y", header "y'", header "Tracer la tangente ?"]
-                 : zipWith arrangePoints [1..]  (head pointss)
-               ]
+    let curveInput =
+          UI.div ## "curves" #+ [
+            tabbedPanel 1270 "tabsStuff" (zipWith curveTab [1..] pointss)
             ]
-        secondPart =
-          UI.div #. "secondPart" #+ [UI.div #. "params" #+ [
-                                        element axisPanel
-                                        ,element tangentPanel
-                                        ,UI.div #. "outputs" #+ [
-                                          collapsiblePanel "tikzCode"
-                                            UI.h3 "code Tikz :"
-                                            [element curveTikz]
-                                          ,collapsiblePanel "pstricksCode"
-                                             UI.h3 "code PsTricks :"
-                                             [element curvePstricks]
-                                          ]
-                                        ]
-                                    ,element svgPanel
-                                    ]
+        params = UI.div ## "params" #+ [
+          element axisPanel
+          ,element tangentPanel
+          ,UI.div #. "paramsPanel" ## "LaTeXOutputs" #+ [
+            collapsiblePanel "tikzCode"
+            UI.h3 "code Tikz :"
+            [element curveTikz]
+            ,collapsiblePanel "pstricksCode"
+             UI.h3 "code PsTricks :"
+             [element curvePstricks]
+            ]
+          ]
+        svgOutput = element svgPanel
 
-    getBody w #+ [UI.h1 # set text "Générateur de courbe point à point"
-                  , firstPart
-                  , secondPart 
+    getBody w #+ [UI.div ## "application" #+ [
+                     UI.h1 # set text "Générateur de courbe point à point"
+                     , curveInput
+                     , params
+                     , svgOutput
+                     ]
                  ]
   where
     
@@ -105,7 +99,7 @@ makeCurves home w config@CGConfig{curveInputs} = do
     (gridOptions, gridPanel, restoreGrid) <- makeGridPanel w config
     (tangentOptions, tangentPanel, restoreTangents) <- makeTangentPanel w config
     
-    (svgSize, svgPanel, curveSvg) <- makeSvgPanel w
+    (svgURI, svgPanel, curveSvg) <- makeSvgPanel w
 
     let curveIns = map (CurvePointsAndT 0.4 . extractViablePoints) <$> xyInss
         configIn =
@@ -114,7 +108,7 @@ makeCurves home w config@CGConfig{curveInputs} = do
          
         tikzTotal = T.unpack . drawAll <$> configIn
 
-        svgTotal = S.drawAll <$> configIn <*> svgSize
+        svgTotal = S.drawAll (S.Width 873) <$> configIn 
         
         pstricksTotal = T.unpack . P.drawAll <$> configIn
         restoreCurves CGConfig{curveInputs} =
@@ -127,14 +121,14 @@ makeCurves home w config@CGConfig{curveInputs} = do
     
 
     curveTikz <- UI.textarea #. "tikzOutput" # set UI.rows "10"
-                   # set UI.cols "50" # set (attr "readonly") "true"
+                   # set UI.cols "60" # set (attr "readonly") "true"
     element curveTikz # sink value tikzTotal
 
     element curveSvg # sink html (T.unpack <$> svgTotal)
     onChange svgTotal (T.writeFile "courbe.svg")
 
     curvePstricks <- UI.textarea #. "pstricksOutput" # set UI.rows "10"
-                   # set UI.cols "50" # set (attr "readonly") "true"
+                   # set UI.cols "60" # set (attr "readonly") "true"
     element curvePstricks # sink value pstricksTotal
 
     return (xyss, curveTikz, svgPanel, curvePstricks, axisPanel, tangentPanel, restoreAll)
@@ -165,7 +159,7 @@ makeAxisPanel w config@CGConfig{axisOptions=AxisOpts{..}} = do
                                ,[header "Graduation sur y tous les :", element eyTicks]
                                ]]
                   ]
-                 #. "panel"
+                 #. "paramsPanel"
   
   return (axisOptions, axisPanel, restoreAxis)
 
@@ -200,7 +194,7 @@ makeGridPanel w config@CGConfig{gridOptions=GridOpts{..}}= do
                                ,[header "Afficher le sous-quadrillage:", element eMinorGrid]
                                ]]
                   ]
-                 #. "panel"
+                 #. "paramsPanel"
   
   return (gridOptions, gridPanel, restoreGrid)
 
@@ -227,24 +221,18 @@ makeTangentPanel w config@CGConfig{tangentsOptions=TanOpts{..}} = do
                         ,[header "Type de ligne :", element estyle]
                         ]
                     ]
-                    #. "panel"
+                    #. "paramsPanel"
   
   return (tangentOptions, tangentPanel, restoreTangents)
 
 makeSvgPanel w = do
-  eSvgSize <- coord
-  iSvgSize <- stepper (S.Width 800) $ S.Width . readDef 800 <$> UI.valueChange eSvgSize
-
   curveSvg <- UI.span  #. "svgOutput"
   uriSvg <- loadFile w "image/svg+xml" "courbe.svg"
 
-  svgPanel <- UI.div #. "control" #+ [UI.h2 # set text "Courbe générée :"
-                                     ,UI.p #+ [UI.span # set text "Largeur de la visualisation :"
-                                              , element eSvgSize]
-                                     ,UI.a #. "svgLink" # set UI.href uriSvg  # set UI.target "_blank"
+  svgPanel <- UI.div ## "svgOutput" #+ [UI.a #. "svgLink" # set UI.href uriSvg  # set UI.target "_blank"
                                         #+ [element curveSvg]
                                      ]
-  return (iSvgSize, svgPanel, curveSvg)
+  return (uriSvg, svgPanel, curveSvg)
 
 extractViablePoints :: [((String,String),String,Bool)] -> [(P2, Maybe Double, Bool)]
 extractViablePoints = sort . map (\(mp,t,b) -> (p2 (fromJust mp), t, b)) . filter (isJust.fst3) . map handlePoint
@@ -252,6 +240,20 @@ extractViablePoints = sort . map (\(mp,t,b) -> (p2 (fromJust mp), t, b)) . filte
     handlePoint ((xstr, ystr),tstr, b) =
       ((,) <$> readMaybe xstr <*> readMaybe ystr, readMaybe tstr, b)
 
+
+curveTab i points =
+  (UI.h4 # set text ("Courbe n°" ++ show i)
+   ,[
+      UI.div #. "leftPanel" #+ [
+               UI.h3 # set text "Tableau des points"
+               ,UI.p # set text "Les points peuvent être entrés en désordre."
+               ]
+      ,UI.div #. "rightPanel" #+ [(grid . transpose $
+                                 [header "#", header "x", header "y", header "y'", header "Tracer la tangente ?"]
+                                 : zipWith arrangePoints [1..]  points) #. "tableDiv"
+                               ]
+      ]    
+   )
 
 arrangePoints i ((x,y),t,b) =
   [string (show i) #. "vheader", element x, element y, element t, element b]

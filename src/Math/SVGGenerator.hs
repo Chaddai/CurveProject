@@ -24,8 +24,8 @@ import qualified Text.Blaze.Svg.Renderer.Text as TBS
 import Data.Maybe
 import Text.Printf
 
-drawAll :: CGConfig -> SizeSpec2D -> Text
-drawAll config@CGConfig{axisOptions=AxisOpts{..}, curveInputs=cs} ss2D =
+drawAll :: SizeSpec2D -> CGConfig -> Text
+drawAll ss2D config@CGConfig{axisOptions=AxisOpts{..}, curveInputs=cs} =
   renderSvg ss2D . view pMin (pMax .-. pMin) $
   mconcat (zipWith drawNCT [1..] cs)
   <> drawAxis config <> drawGrid config
