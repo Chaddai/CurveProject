@@ -12,6 +12,7 @@ div#application {
     ;margin-right:auto
     ;background-color:lightgray
     ;box-shadow:-4px -2px 10px black
+    ;overflow:hidden
 }
 
 /* application title */
@@ -50,7 +51,7 @@ div#curves {
 /* parameters of axis, grid and tangents */    
 div#params {
     display:block
-    ;position:absolute
+    ;float:left
     ;width:380px
     ;margin:0
     ;padding:0
