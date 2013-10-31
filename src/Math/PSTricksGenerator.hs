@@ -49,6 +49,7 @@ drawGrid CGConfig{axisOptions=AxisOpts{..}, gridOptions=GridOpts{..}, comments}
     <> ", subgriddiv=" <> if minorGrid then decimal (floor $ dxMajor/dxMinor) else "0" 
     <> ", subgridwidth=.1pt, subgridcolor=lightgray]"
     <> point (xOrig & yOrig) <> point (xMin & yMin) <> point (xMax & yMax) <> "\n"
+  | otherwise = mempty  
                        
 drawCurve :: Int -> CGConfig -> CurveOptions -> Curve -> Builder
 drawCurve i CGConfig{comments} CurveOpts{..} (BezierJoints (map piPoint -> ps@(_:_:_))) =

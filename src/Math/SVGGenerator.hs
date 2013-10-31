@@ -69,13 +69,13 @@ ticks p1 p2 myOrigin cmin cmax corig space dist =
 
 drawGrid :: CGConfig -> Diagram SVG R2
 drawGrid config@CGConfig{gridOptions=GridOpts{..}} =
-  mWhen majorGrid (grid config dxMajor dyMajor # lw 0.005 # lc gray) 
-  <> mWhen minorGrid (grid config dxMinor dyMinor # lw 0.002 # lc lightgray)
+  mWhen majorGrid (grid config dxMajor dyMajor # lw 0.007 # lc gray) 
+  <> mWhen minorGrid (grid config dxMinor dyMinor # lw 0.004 # lc gray)
 
 grid :: CGConfig -> Double -> Double -> Diagram SVG R2
 grid CGConfig{axisOptions=AxisOpts{..}} dx dy =
   mconcat $ map xGrid ([xOrig+dx, xOrig+2*dx..xMax] ++ [xOrig-dx, xOrig-2*dx..xMin])
-  ++ map yGrid ([yOrig+dx, yOrig+2*dy..yMax] ++ [yOrig-dy, yOrig-2*dy..yMin])
+  ++ map yGrid ([yOrig+dy, yOrig+2*dy..yMax] ++ [yOrig-dy, yOrig-2*dy..yMin])
   where
     xGrid x = (x & yMin) ~~ (x & yMax)
     yGrid y = (xMin & y) ~~ (xMax & y)

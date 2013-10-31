@@ -54,7 +54,8 @@ setup home w = void $ do
               then liftM (either (const def) id . loadConfig) $ B.readFile autosave
               else return def
 
-    (pointss, curveTikz, svgPanel, curvePstricks, axisPanel, tangentPanel, restoreAll) <- makeCurves home w config
+    (pointss, curveTikz, svgPanel, curvePstricks, axisPanel, gridPanel, tangentPanel, restoreAll) 
+    	      <- makeCurves home w config
 
     restoreAll config
 
@@ -64,6 +65,7 @@ setup home w = void $ do
             ]
         params = UI.div ## "params" #+ [
           element axisPanel
+	  ,element gridPanel
           ,element tangentPanel
           ,UI.div #. "paramsPanel" ## "LaTeXOutputs" #+ [
             collapsiblePanel "tikzCode"
@@ -131,7 +133,7 @@ makeCurves home w config@CGConfig{curveInputs} = do
                    # set UI.cols "60" # set (attr "readonly") "true"
     element curvePstricks # sink value pstricksTotal
 
-    return (xyss, curveTikz, svgPanel, curvePstricks, axisPanel, tangentPanel, restoreAll)
+    return (xyss, curveTikz, svgPanel, curvePstricks, axisPanel, gridPanel, tangentPanel, restoreAll)
 
 
 makeAxisPanel w config@CGConfig{axisOptions=AxisOpts{..}} = do
@@ -315,5 +317,6 @@ header str = string str #. "header"
 fst3 (a,_,_) = a
 snd3 (_,b,_) = b
 thrd3 (_,_,c) = c
-noZero 0 = 1
+noZero n
+  | n >= -0.01 && n <= 0.01 = 1
 noZero n = n
