@@ -28,7 +28,7 @@ drawAll config@CGConfig{axisOptions=AxisOpts{..}, comments, curveInputs=cs} =
   toLazyText $
   "\\begin{tikzpicture}[x=1cm,y=1cm]\n\n"
   <> mWhen comments "% Limite le dessin au repère\n"
-  <> "\\clip " <> point (xMin & yMin) <> " rectangle " <> point (xMax & yMax) <> ";\n\n"
+  <> "\\clip " <> point (xMin ^& yMin) <> " rectangle " <> point (xMax ^& yMax) <> ";\n\n"
   <> drawGrid config <> drawAxis config
   <> mconcat (zipWith drawNCT [1..] cs)
   <> "\\end{tikzpicture}\n"
@@ -38,8 +38,8 @@ drawAll config@CGConfig{axisOptions=AxisOpts{..}, comments, curveInputs=cs} =
 drawAxis :: CGConfig -> Builder
 drawAxis CGConfig{axisOptions=AxisOpts {..}, comments} =
   mWhen comments "% Axes du repère\n"
-  <> "\\draw [->] " <> point (xMin & yOrig) <> " -- " <> point (xMax & yOrig) <> ";\n"
-  <> "\\draw [->] " <> point (xOrig & yMin) <> " -- " <> point (xOrig & yMax) <> ";\n"
+  <> "\\draw [->] " <> point (xMin ^& yOrig) <> " -- " <> point (xMax ^& yOrig) <> ";\n"
+  <> "\\draw [->] " <> point (xOrig ^& yMin) <> " -- " <> point (xOrig ^& yMax) <> ";\n"
   <> "\\foreach \\x in {"
   <> showListF 2 (filter (inRange xMin xMax) $ [xOrig + xTicks, xOrig + 2*xTicks..xMax]
                   ++ [xOrig - xTicks, xOrig - 2*xTicks..xMin]) <> "}\n"
@@ -64,10 +64,10 @@ drawGrid CGConfig{axisOptions=AxisOpts{..}, gridOptions=GridOpts{..}, comments} 
       mWhen comments ("% Grille du repère\n")
       <> "\\draw[xstep=" <> showF 3 dxMajor <> ", ystep=" <> showF 3 dyMajor
       <> ",help lines,shift={" <> point pOrig <> "}] " <> point (pMin .-^ vOrig) <> " grid" <> point (pMax .-^ vOrig) <> ";\n"
-    pOrig = xOrig & yOrig
-    vOrig = xOrig & yOrig
-    pMin = xMin & yMin
-    pMax = xMax & yMax
+    pOrig = xOrig ^& yOrig
+    vOrig = xOrig ^& yOrig
+    pMin = xMin ^& yMin
+    pMax = xMax ^& yMax
       
 drawCurve :: Int -> CGConfig -> CurveOptions -> Curve -> Builder
 drawCurve i CGConfig{comments} CurveOpts{..} (BezierJoints (map piPoint -> p:c:ps)) =
