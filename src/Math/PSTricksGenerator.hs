@@ -25,7 +25,7 @@ import Data.VectorSpace
 drawAll :: CGConfig -> Text
 drawAll config@CGConfig{axisOptions=AxisOpts{..}, comments, curveInputs=cs} =
   toLazyText $ mWhen comments "% Limite le dessin au repère\n"
-  <> "\\begin{pspicture*}" <> point (xMin & yMin) <> point (xMax & yMax) <> "\n\n"
+  <> "\\begin{pspicture*}" <> point (xMin ^& yMin) <> point (xMax ^& yMax) <> "\n\n"
   <> drawGrid config <> drawAxis config
   <> mconcat (zipWith drawNCT [1..] cs)
   <> "\\end{pspicture*}\n"
@@ -37,7 +37,7 @@ drawAxis CGConfig{axisOptions=AxisOpts {..}, comments} =
   mWhen comments "% Axes du repère\n"
   <> "\\psaxes[linewidth=1pt, showorigin=false,Dx=" <> showF 3 xTicks <> ",Dy=" <> showF 3 yTicks
   <> ", Ox=" <> showF 3 xOrig <> ", Oy=" <> showF 3 yOrig <> "]{->}"
-  <> point (xOrig & yOrig) <> point (xMin & yMin) <> point (xMax & yMax) <> "\n"
+  <> point (xOrig ^& yOrig) <> point (xMin ^& yMin) <> point (xMax ^& yMax) <> "\n"
 
 drawGrid :: CGConfig -> Builder
 drawGrid CGConfig{axisOptions=AxisOpts{..}, gridOptions=GridOpts{..}, comments}
@@ -48,7 +48,7 @@ drawGrid CGConfig{axisOptions=AxisOpts{..}, gridOptions=GridOpts{..}, comments}
     -- PSTricks can't do different subgrids in the x and y dimensions
     <> ", subgriddiv=" <> if minorGrid then decimal (floor $ dxMajor/dxMinor) else "0" 
     <> ", subgridwidth=.1pt, subgridcolor=lightgray]"
-    <> point (xOrig & yOrig) <> point (xMin & yMin) <> point (xMax & yMax) <> "\n"
+    <> point (xOrig ^& yOrig) <> point (xMin ^& yMin) <> point (xMax ^& yMax) <> "\n"
   | otherwise = mempty  
                        
 drawCurve :: Int -> CGConfig -> CurveOptions -> Curve -> Builder
