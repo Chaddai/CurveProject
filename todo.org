@@ -1,0 +1,5 @@
+
+* Use threepenny-gui 4 (UI monad, widgets...)
+* Use lens for the config
+* Write new widgets that takes a lens and an effect in parameter and affect it as well as are affected by the event (by the lens intermediary)
+* Create a new monad stack (StateT UI) to transport implicitly the config behaviour and add the effect of each new lens widget on it :)
