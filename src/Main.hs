@@ -39,20 +39,21 @@ main :: IO ()
 main = do
   [staticDirToUse] <- getArgs
   
-  startGUI defaultConfig { tpPort = 10000, tpStatic = Just staticDirToUse } (setup staticDirToUse)
+  startGUI defaultConfig { tpPort = Just 10000, tpStatic = Just staticDirToUse } (setup staticDirToUse)
 
-setup :: FilePath -> Window -> IO ()
-setup home w = void $ do
-    debug w "In the looking glass"
+setup :: FilePath -> Window -> UI ()
+setup home w = do
+    debug "In the looking glass"
     return w # set title "Générateur de courbe point par point"
     UI.addStyleSheet w "style.css"
     UI.addStyleSheet w "widgets.css"
 
     let autosave =  home </> "autosave.session"
-    b <- doesFileExist $ autosave
-    config <- if b
-              then liftM (either (const def) id . loadConfig) $ B.readFile autosave
-              else return def
+    b <- liftIO $ doesFileExist autosave
+    config <- liftIO $ if b
+                       then liftM (either (const def) id . loadConfig)
+                            $ B.readFile autosave
+                       else return def
 
     (pointss, curveTikz, svgPanel, curvePstricks, axisPanel, gridPanel, tangentPanel, restoreAll) 
     	      <- makeCurves home w config
@@ -85,10 +86,10 @@ setup home w = void $ do
                      , svgOutput
                      ]
                  ]
-  where
+    return ()
     
     
-
+makeCurves :: FilePath -> Window -> CGConfig -> UI ( [[((Element,Element),Element,Element)]], Element, Element, Element, Element, Element, Element, CGConfig -> UI () )
 makeCurves home w config@CGConfig{curveInputs} = do
     xyss <- replicateM 10
              (replicateM 20 $ liftM3 (,,) (liftM2 (,) coord coord) coord checkTangent)
@@ -118,8 +119,8 @@ makeCurves home w config@CGConfig{curveInputs} = do
         restoreAll config = sequence_ . map ($ config) $ [restoreTangents, restoreGrid, restoreAxis, restoreCurves]
 
 
-    _ <- UI.register (disconnect w)
-         (const $ B.writeFile (home </> "autosave.session") . saveConfig =<< currentValue configIn)
+    UI.onEvent (disconnect w)
+         (const . liftIO $ B.writeFile (home </> "autosave.session") . saveConfig =<< currentValue configIn)
     
 
     curveTikz <- UI.textarea #. "tikzOutput" # set UI.rows "10"
@@ -127,7 +128,7 @@ makeCurves home w config@CGConfig{curveInputs} = do
     element curveTikz # sink value tikzTotal
 
     element curveSvg # sink html (T.unpack <$> svgTotal)
-    onChange svgTotal (T.writeFile "courbe.svg")
+    onChanges svgTotal (liftIO . T.writeFile "courbe.svg")
 
     curvePstricks <- UI.textarea #. "pstricksOutput" # set UI.rows "10"
                    # set UI.cols "60" # set (attr "readonly") "true"
@@ -229,7 +230,7 @@ makeTangentPanel w config@CGConfig{tangentsOptions=TanOpts{..}} = do
 
 makeSvgPanel w = do
   curveSvg <- UI.span  #. "svgOutput"
-  uriSvg <- loadFile w "image/svg+xml" "courbe.svg"
+  uriSvg <- loadFile "image/svg+xml" "courbe.svg"
 
   svgPanel <- UI.div ## "svgOutput" #+ [UI.a #. "svgLink" # set UI.href uriSvg  # set UI.target "_blank"
                                         #+ [element curveSvg]

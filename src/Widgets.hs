@@ -6,12 +6,12 @@ import qualified Graphics.UI.Threepenny as UI
 import Control.Applicative
 import Control.Monad (void, mapM, zipWithM_)
 
-collapsiblePanel :: String -> IO Element -> String -> [IO Element] -> IO Element
+collapsiblePanel :: String -> UI Element -> String -> [UI Element] -> UI Element
 collapsiblePanel ident titleLevel title contents = do
   toggle <- string "+" #. "toggleCollapse"
   collapsingSection <- UI.div #. "collapsible" # set style [("display","none")]
   flipFlop <- UI.accumE True (not <$ UI.click toggle)
-  void $ register flipFlop $ \showing -> void $ do
+  onEvent flipFlop $ \showing -> do
     stateToggle <- toggle # get text
     case showing of
       False -> do
@@ -25,7 +25,7 @@ collapsiblePanel ident titleLevel title contents = do
     ,element collapsingSection ## ident #+ contents
     ]
   
-tabbedPanel :: Int -> String -> [(IO Element,[IO Element])] -> IO Element
+tabbedPanel :: Int -> String -> [(UI Element,[UI Element])] -> UI Element
 tabbedPanel width ident tabs = do
   let (titles, contents) = unzip tabs
       tabCount = length tabs

@@ -94,11 +94,11 @@ createCurve _ = BezierJoints []
 
 computeDVector :: P2 -> P2 -> P2 -> Maybe Double -> R2
 computeDVector (coords -> lx :& ly) (coords -> mx :& my) (coords -> rx :& ry) givenT
-  | (ly - my)*(ry - my) > 0 && isNothing givenT = x & 0
-  | otherwise                                  = x & y
+  | (ly - my)*(ry - my) > 0 && isNothing givenT = x ^& 0
+  | otherwise                                  = x ^& y
   where
     t = fromMaybe ((ly-ry)/(lx-rx)) givenT 
     x = min (mx - lx) (rx - mx)
     y = t*x
 
-centralSymAbout c = rotateAbout c (1/2 :: Turn)
+centralSymAbout c = rotateAbout c (1/2 @@ turn)
