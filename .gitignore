@@ -2,4 +2,5 @@ bin/
 *.svg
 dist/
 *~
+.cabal-sandbox
 
