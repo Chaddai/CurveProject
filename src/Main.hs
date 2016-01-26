@@ -20,7 +20,8 @@ import qualified Data.Text.Lazy as T
 import qualified Data.Text.Lazy.IO as T
 import Control.Arrow
 import Diagrams.Prelude (p2, P2)
-import Diagrams.Coordinates 
+import Diagrams.Coordinates
+import Diagrams.TwoD.Size (mkWidth)
 
 -- System stuff
 import System.Environment (getArgs)
@@ -39,7 +40,7 @@ main :: IO ()
 main = do
   [staticDirToUse] <- getArgs
   
-  startGUI defaultConfig { tpPort = Just 10000, tpStatic = Just staticDirToUse } (setup staticDirToUse)
+  startGUI defaultConfig { jsPort = Just 51333, jsStatic = Just staticDirToUse } (setup staticDirToUse)
 
 setup :: FilePath -> Window -> UI ()
 setup home w = do
@@ -111,7 +112,7 @@ makeCurves home w config@CGConfig{curveInputs} = do
          
         tikzTotal = T.unpack . drawAll <$> configIn
 
-        svgTotal = S.drawAll (S.Width 873) <$> configIn 
+        svgTotal = S.drawAll (mkWidth 873) <$> configIn 
         
         pstricksTotal = T.unpack . P.drawAll <$> configIn
         restoreCurves CGConfig{curveInputs} =
@@ -128,7 +129,7 @@ makeCurves home w config@CGConfig{curveInputs} = do
     element curveTikz # sink value tikzTotal
 
     element curveSvg # sink html (T.unpack <$> svgTotal)
-    onChanges svgTotal (liftIO . T.writeFile "courbe.svg")
+    onChanges svgTotal (liftIO . T.writeFile (home </> "courbe.svg"))
 
     curvePstricks <- UI.textarea #. "pstricksOutput" # set UI.rows "10"
                    # set UI.cols "60" # set (attr "readonly") "true"
@@ -230,14 +231,15 @@ makeTangentPanel w config@CGConfig{tangentsOptions=TanOpts{..}} = do
 
 makeSvgPanel w = do
   curveSvg <- UI.span  #. "svgOutput"
-  uriSvg <- loadFile "image/svg+xml" "courbe.svg"
+  -- uriSvg <- loadFile "image/svg+xml" "courbe.svg"
+  let uriSvg = "/static/courbe.svg"
 
   svgPanel <- UI.div ## "svgOutput" #+ [UI.a #. "svgLink" # set UI.href uriSvg  # set UI.target "_blank"
                                         #+ [element curveSvg]
                                      ]
   return (uriSvg, svgPanel, curveSvg)
 
-extractViablePoints :: [((String,String),String,Bool)] -> [(P2, Maybe Double, Bool)]
+extractViablePoints :: [((String,String),String,Bool)] -> [(P2 Double, Maybe Double, Bool)]
 extractViablePoints = sort . map (\(mp,t,b) -> (p2 (fromJust mp), t, b)) . filter (isJust.fst3) . map handlePoint
   where
     handlePoint ((xstr, ystr),tstr, b) =

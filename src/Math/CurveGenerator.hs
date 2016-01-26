@@ -23,11 +23,11 @@ import Data.ByteString (ByteString)
 import Data.Serialize
 
 -- All major input types and the configuration that holds them all
-data CurveInput = CurvePointsAndT { looseness :: Double, pointsWithT :: [(P2, Maybe Double, Bool)] }
+data CurveInput = CurvePointsAndT { looseness :: Double, pointsWithT :: [(P2 Double, Maybe Double, Bool)] }
                   | CurveFunction { func :: String, wantTangents :: [Double] }
 instance Default CurveInput where
   def = CurvePointsAndT { looseness=0.4, pointsWithT=[] }
-instance SafeCopy (Point R2) where
+instance SafeCopy (P2 Double) where
   putCopy (coords -> x :& y) = contain $ safePut x >> safePut y
   getCopy = contain $ curry p2 <$> safeGet <*> safeGet
 deriveSafeCopy 1 'base ''CurveInput
@@ -68,7 +68,7 @@ saveConfig = runPut . safePut
 loadConfig :: ByteString -> Either String CGConfig
 loadConfig = runGet safeGet
 
-data PointInfo = Through { piPoint :: P2, tangent :: R2, drawTangent :: Bool } | Control { piPoint :: P2 }
+data PointInfo = Through { piPoint :: P2 Double, tangent :: V2 Double, drawTangent :: Bool } | Control { piPoint :: P2 Double }
 
 data Curve = BezierJoints [PointInfo]
 
@@ -92,7 +92,7 @@ createCurve (CurvePointsAndT e params@((lextr,t, b):(p2,_,_):ps)) = BezierJoints
         rcp = p2 .+^ (e *^ dv)
 createCurve _ = BezierJoints []
 
-computeDVector :: P2 -> P2 -> P2 -> Maybe Double -> R2
+computeDVector :: P2 Double -> P2 Double -> P2 Double -> Maybe Double -> V2 Double
 computeDVector (coords -> lx :& ly) (coords -> mx :& my) (coords -> rx :& ry) givenT
   | (ly - my)*(ry - my) > 0 && isNothing givenT = x ^& 0
   | otherwise                                  = x ^& y
@@ -101,4 +101,4 @@ computeDVector (coords -> lx :& ly) (coords -> mx :& my) (coords -> rx :& ry) gi
     x = min (mx - lx) (rx - mx)
     y = t*x
 
-centralSymAbout c = rotateAbout c (1/2 @@ turn)
+centralSymAbout c = rotateAround c (1/2 @@ turn)

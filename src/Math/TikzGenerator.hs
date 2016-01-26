@@ -20,7 +20,8 @@ import Data.List
 
 import Diagrams.Coordinates
 import Diagrams.Prelude (P2, (.-^), (.+^))
-import Data.VectorSpace
+import Linear.Vector
+import Linear.Metric (normalize)
 
 
 drawAll :: CGConfig -> Text
@@ -82,7 +83,7 @@ drawCurve _ _ _ _ = mempty
 drawTangents :: Int -> CGConfig -> Curve -> Builder
 drawTangents i CGConfig{tangentsOptions=TanOpts {..}, comments} (BezierJoints pts) = go pts
   where
-    go (Through p (normalized -> t) True : pts) =
+    go (Through p (normalize -> t) True : pts) =
       mWhen comments ("% Tangente en " <> point p <> " à la courbe n°" <> decimal i <> "\n")
       <> "\\draw [<->, " <> fromString tangentColor <> ", " <> fromString tangentStyle
       <> "] " <> point (p .-^ tangentLen *^ t) <> " -- " <> point (p .+^ tangentLen *^ t) <> ";\n"
