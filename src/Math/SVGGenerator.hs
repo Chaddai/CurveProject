@@ -20,10 +20,10 @@ import Linear.Vector
 
 import Diagrams.TwoD.Arrow
 import Diagrams.Prelude
-import Diagrams.Core.Types 
+import Diagrams.Core.Types
 
 import Diagrams.Backend.SVG (SVG(..), Options(..))
-import Lucid.Base (renderText)
+import Graphics.Svg (prettyText)
 
 import Control.Lens ((^.))
 
@@ -40,7 +40,7 @@ drawAll ss2D config@CGConfig{axisOptions=AxisOpts{..}, curveInputs=cs} =
         pMax = xMax ^& yMax
 
 renderSvg :: SizeSpec V2 Double -> Diagram SVG -> Text
-renderSvg ss2D = renderText . renderDia SVG (SVGOptions ss2D Nothing "")
+renderSvg ss2D = prettyText . renderDia SVG (SVGOptions ss2D Nothing "" [] True)
 
 drawAxis :: CGConfig -> Diagram SVG
 drawAxis CGConfig{axisOptions=AxisOpts {..}} =
@@ -71,7 +71,7 @@ ticks p1 p2 myOrigin cmin cmax corig space dist =
 
 drawGrid :: CGConfig -> Diagram SVG
 drawGrid config@CGConfig{gridOptions=GridOpts{..}} =
-  mWhen majorGrid (grid config dxMajor dyMajor # lw veryThin # lc gray) 
+  mWhen majorGrid (grid config dxMajor dyMajor # lw veryThin # lc gray)
   <> mWhen minorGrid (grid config dxMinor dyMinor # lw ultraThin # lc gray)
 
 grid :: CGConfig -> Double -> Double -> Diagram SVG
@@ -93,13 +93,13 @@ drawCurve i CurveOpts{..} (BezierJoints (map piPoint -> ps@(_:_:_))) =
     go _ = []
 drawCurve _ _ _ = mempty
 
- 
+
 drawTangents :: Int -> CGConfig -> Curve -> Diagram SVG
 drawTangents i CGConfig{tangentsOptions=TanOpts {..}} (BezierJoints pts) =
   go pts
   where
     go (Through p (normalize -> t) True : pts) =
-      position [(p, circle 0.05 # fc tColour)] 
+      position [(p, circle 0.05 # fc tColour)]
       <> tangentLine (p .-^ tangentLen *^ t) (p .+^ tangentLen *^ t) tColour (dashPatternFrom tangentStyle)
       <> go pts
     go (_:pts) = go pts
@@ -110,7 +110,7 @@ tangentLine p1 p2 c d = arrowBetween' (with & arrowHead .~ spike
                                             & arrowTail .~ spike'
                                             & lengths .~ verySmall)
                                       p1 p2 # d # lw veryThin # lc c # fc c
-  
+
 colourFrom c = fromMaybe black . readColourName $ c
 dashPatternFrom s = case s of
   "solid" -> dashing [] (local 0)
