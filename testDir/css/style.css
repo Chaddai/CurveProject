@@ -1,0 +1,104 @@
+/* curve generator styles */
+
+body {
+    background-color:rgb(246, 244, 240)
+}
+
+div#application {
+    display:block
+    ;width:1270px
+    ;padding:5px
+    ;margin-left:auto
+    ;margin-right:auto
+    ;background-color:lightgray
+    ;box-shadow:-4px -2px 10px black
+    ;overflow:hidden
+}
+
+/* application title */
+h1 {
+    margin:-5px -5px 5px -5px
+    ;padding:1mm
+    ;color:white
+    ;font-size:20pt
+    ;background-color:black
+}
+
+/* parameters and specifications of curves */
+div#curves {
+    display:block
+    ;width:100%
+    ;padding:0
+    ;margin:5px 0 5px 0
+}
+
+  /* left panels of the curves panels */
+  div.leftPanel {
+      display:block
+      ;float:left
+      ;width:380px
+      ;margin:0px 5px 0px 0px
+      ;padding:5px
+  }
+
+  /* right panels of the curves panels */
+  div.rightPanel {
+      display:block
+      ;width:885px
+      ;margin:0px 0px 0px 385px
+  }
+
+/* parameters of axis, grid and tangents */    
+div#params {
+    display:block
+    ;float:left
+    ;width:380px
+    ;margin:0
+    ;padding:0
+    ;height:auto
+}
+
+
+  /* panels of parameters */
+  .paramsPanel {
+      display:block
+      ;width:368px
+      ;padding:5px
+      ;margin:0 0 5px 0
+      ;border:1px solid black
+      ;text-align:left
+  }
+
+/* output in svg */
+div#svgOutput {
+    display:block
+    ;width:883px
+    ;padding:0
+    ;margin:0px 0px 0px 385px
+    ;border:1px solid black
+}
+
+
+.header     { text-align: right;
+                display: block;
+                padding: 1mm;
+                vertical-align: middle;
+	    }
+.vheader     { text-align: center;
+                display: block;
+                padding: 1mm;
+                vertical-align: middle;
+	    }
+.coords      { width: 0.7cm;
+                padding: 1mm;
+		vertical-align: middle;
+	     }
+.table       { display:table;
+	       margin: auto; 
+	     }
+svg          { background: white; padding: 5px; }
+a.svgLink    { text-decoration: none; margin:0; padding:0}
+textarea     { width:365px;}
+
+h4 { margin: 0px;}
+
