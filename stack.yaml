@@ -5,8 +5,8 @@ resolver: lts-7.3
 
 # Local packages, usually specified by relative directory name
 packages:
-- ..\threepenny-gui\
-- high-school-plotting\
+- ../threepenny-gui/
+- high-school-plotting/
 
 # Packages to be pulled from upstream that are not in the resolver (e.g., acme-missiles-0.3)
 extra-deps: [websockets-snap-0.10.0.0]
