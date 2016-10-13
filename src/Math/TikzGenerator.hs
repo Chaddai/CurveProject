@@ -43,12 +43,12 @@ drawAxis CGConfig{axisOptions=AxisOpts {..}, comments} =
   <> "\\draw [->] " <> point (xOrig ^& yMin) <> " -- " <> point (xOrig ^& yMax) <> ";\n"
   <> "\\foreach \\x in {"
   <> showListF 2 (filter (inRange xMin xMax) $ [xOrig + xTicks, xOrig + 2*xTicks..xMax]
-                  ++ [xOrig - xTicks, xOrig - 2*xTicks..xMin]) <> "}\n"
-  <> "    \\draw[shift={(\\x," <> showF 3 yOrig <> ")}] (0,0.2) -- (0,-0.2) node[below,fill=white] {$\\x$};\n"
+                  ++ [xOrig - xTicks, xOrig - 2*xTicks..xMin]) <> "} {\n"
+  <> "    \\draw[shift={(\\x," <> showF 3 yOrig <> ")}] (0,0.2) -- (0,-0.2) node[below,fill=white] {$\\x$};\n}\n"
   <> "\\foreach \\y in {"
   <> showListF 2 (filter (inRange yMin yMax) $ [yOrig + yTicks, yOrig + 2*yTicks..yMax]
-                  ++ [yOrig - yTicks, yOrig - 2*yTicks..yMin]) <> "}\n"
-  <> "    \\draw[shift={(" <> showF 3 xOrig <> ",\\y)}] (0.2,0) -- (-0.2,0) node[left,fill=white] {$\\y$};\n\n"
+                  ++ [yOrig - yTicks, yOrig - 2*yTicks..yMin]) <> "} {\n"
+  <> "    \\draw[shift={(" <> showF 3 xOrig <> ",\\y)}] (0.2,0) -- (-0.2,0) node[left,fill=white] {$\\y$};\n}\n\n"
 
 drawGrid :: CGConfig -> Builder
 drawGrid CGConfig{axisOptions=AxisOpts{..}, gridOptions=GridOpts{..}, comments} =
@@ -69,7 +69,7 @@ drawGrid CGConfig{axisOptions=AxisOpts{..}, gridOptions=GridOpts{..}, comments} 
     vOrig = xOrig ^& yOrig
     pMin = xMin ^& yMin
     pMax = xMax ^& yMax
-      
+
 drawCurve :: Int -> CGConfig -> CurveOptions -> Curve -> Builder
 drawCurve i CGConfig{comments} CurveOpts{..} (BezierJoints (map piPoint -> p:c:ps)) =
   mWhen comments ("% Courbe n°" <> decimal i <> "\n")
@@ -79,7 +79,7 @@ drawCurve i CGConfig{comments} CurveOpts{..} (BezierJoints (map piPoint -> p:c:p
     go [c,p] = " and " <> point c <> " .. " <> point p <> ";\n\n"
     go (lc:p:rc:ps) = " and " <> point lc <> " .. " <> point p <> " .. controls " <> point rc <> go ps
 drawCurve _ _ _ _ = mempty
- 
+
 drawTangents :: Int -> CGConfig -> Curve -> Builder
 drawTangents i CGConfig{tangentsOptions=TanOpts {..}, comments} (BezierJoints pts) = go pts
   where
@@ -91,4 +91,3 @@ drawTangents i CGConfig{tangentsOptions=TanOpts {..}, comments} (BezierJoints pt
     go (_ : pts) = go pts
     go _ = mempty
 drawTangents _ _ _ = mempty
-
