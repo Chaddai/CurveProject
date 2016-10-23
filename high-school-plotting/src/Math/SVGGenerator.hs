@@ -99,7 +99,7 @@ drawTangents i CGConfig{tangentsOptions=TanOpts {..}} (BezierJoints pts) =
   go pts
   where
     go (Through p (normalize -> t) True : pts) =
-      position [(p, circle 0.05 # fc tColour)]
+      position [(p, circle 0.05 # lc tColour # fc tColour)]
       <> tangentLine (p .-^ tangentLen *^ t) (p .+^ tangentLen *^ t) tColour (dashPatternFrom tangentStyle)
       <> go pts
     go (_:pts) = go pts

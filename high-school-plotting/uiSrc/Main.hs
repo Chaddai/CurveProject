@@ -39,7 +39,7 @@ Enabled
 main :: IO ()
 main = do
   [staticDirToUse] <- getArgs
-  
+
   startGUI defaultConfig { jsPort = Just 51333, jsStatic = Just staticDirToUse } (setup staticDirToUse)
 
 setup :: FilePath -> Window -> UI ()
@@ -56,7 +56,7 @@ setup home w = do
                             $ B.readFile autosave
                        else return def
 
-    (pointss, curveTikz, svgPanel, curvePstricks, axisPanel, gridPanel, tangentPanel, restoreAll) 
+    (pointss, curveTikz, svgPanel, curvePstricks, axisPanel, gridPanel, tangentPanel, restoreAll)
     	      <- makeCurves home w config
 
     restoreAll config
@@ -88,32 +88,32 @@ setup home w = do
                      ]
                  ]
     return ()
-    
-    
+
+
 makeCurves :: FilePath -> Window -> CGConfig -> UI ( [[((Element,Element),Element,Element)]], Element, Element, Element, Element, Element, Element, CGConfig -> UI () )
 makeCurves home w config@CGConfig{curveInputs} = do
     xyss <- replicateM 10
              (replicateM 20 $ liftM3 (,,) (liftM2 (,) coord coord) coord checkTangent)
     xyInss <-
-      fmap T.sequenceA $
+      T.sequenceA <$>
         zipWithM (\(curveInput,_) xys -> fmap T.sequenceA . sequence $ pointInputs curveInput xys)
           curveInputs xyss
 
     (axisOptions, axisPanel, restoreAxis) <- makeAxisPanel w config
     (gridOptions, gridPanel, restoreGrid) <- makeGridPanel w config
     (tangentOptions, tangentPanel, restoreTangents) <- makeTangentPanel w config
-    
+
     (svgURI, svgPanel, curveSvg) <- makeSvgPanel w
 
     let curveIns = map (CurvePointsAndT 0.4 . extractViablePoints) <$> xyInss
         configIn =
           (\curves gOpts aOpts tOpts -> CGConfig (map (id &&& const def) curves) gOpts aOpts tOpts True)
           <$> curveIns <*> gridOptions <*> axisOptions <*> tangentOptions
-         
+
         tikzTotal = T.unpack . drawAll <$> configIn
 
-        svgTotal = S.drawAll (mkWidth 873) <$> configIn 
-        
+        svgTotal = S.drawAll (mkWidth 873) <$> configIn
+
         pstricksTotal = T.unpack . P.drawAll <$> configIn
         restoreCurves CGConfig{curveInputs} =
           zipWithM_ (\(curveInput,_) xys -> restorePoints curveInput xys) curveInputs xyss
@@ -122,7 +122,7 @@ makeCurves home w config@CGConfig{curveInputs} = do
 
     UI.onEvent (disconnect w)
          (const . liftIO $ B.writeFile (home </> "autosave.session") . saveConfig =<< currentValue configIn)
-    
+
 
     curveTikz <- UI.textarea #. "tikzOutput" # set UI.rows "10"
                    # set UI.cols "60" # set (attr "readonly") "true"
@@ -147,7 +147,7 @@ makeAxisPanel w config@CGConfig{axisOptions=AxisOpts{..}} = do
   let axisOptions =
         axisOptsProtected <$> ixMin <*> ixMax <*> iyMin <*> iyMax <*> ixOrig <*> iyOrig <*> ixTicks <*> iyTicks
       axisOptsProtected xMin xMax yMin yMax xOrig yOrig xTicks yTicks = AxisOpts xMin xMax yMin yMax xOrig yOrig (noZero xTicks) (noZero yTicks)
-      restoreAxis CGConfig{axisOptions=AxisOpts{..}} = 
+      restoreAxis CGConfig{axisOptions=AxisOpts{..}} =
         zipWithM_ (\d e -> element e # set value (show d))
           [xMin, xMax, yMin, yMax, xOrig, yOrig, xTicks, yTicks] es
 
@@ -164,7 +164,7 @@ makeAxisPanel w config@CGConfig{axisOptions=AxisOpts{..}} = do
                                ]]
                   ]
                  #. "paramsPanel"
-  
+
   return (axisOptions, axisPanel, restoreAxis)
 
 makeGridPanel w config@CGConfig{gridOptions=GridOpts{..}}= do
@@ -199,7 +199,7 @@ makeGridPanel w config@CGConfig{gridOptions=GridOpts{..}}= do
                                ]]
                   ]
                  #. "paramsPanel"
-  
+
   return (gridOptions, gridPanel, restoreGrid)
 
 
@@ -226,7 +226,7 @@ makeTangentPanel w config@CGConfig{tangentsOptions=TanOpts{..}} = do
                         ]
                     ]
                     #. "paramsPanel"
-  
+
   return (tangentOptions, tangentPanel, restoreTangents)
 
 makeSvgPanel w = do
@@ -257,7 +257,7 @@ curveTab i points =
                                  [header "#", header "x", header "y", header "y'", header "Tracer la tangente ?"]
                                  : zipWith arrangePoints [1..]  points) #. "tableDiv"
                                ]
-      ]    
+      ]
    )
 
 arrangePoints i ((x,y),t,b) =
