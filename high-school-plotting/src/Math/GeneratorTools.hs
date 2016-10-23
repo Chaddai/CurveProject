@@ -1,18 +1,13 @@
 {-# LANGUAGE ViewPatterns, OverloadedStrings #-}
 module Math.GeneratorTools where
 
-import Math.CurveGenerator
-
-import Data.Text.Lazy (Text)
 import Data.Text.Lazy.Builder
-import Data.Text.Lazy.Builder.RealFloat
-import Data.Text.Lazy.Builder.Int
 import Data.Monoid
 import Text.Printf
 import Data.List
 
 import Diagrams.Coordinates
-import Diagrams.Prelude (P2, (.-^), (.+^))
+import Diagrams.Prelude (P2)
 
 showF :: Int -> Double -> Builder
 showF n = fromString . post . printf ("%." ++ show n ++ "f")
@@ -26,6 +21,7 @@ post = reverse . go . reverse
         go ('0':cs) = go cs
         go cs       = cs
 
+inRange :: (Ord a) => a -> a -> a -> Bool
 inRange cmin cmax x = cmin < x && x < cmax
 
 point :: P2 Double -> Builder
@@ -33,3 +29,4 @@ point (coords -> x :& y) = "(" <> showF 3 x <> " , " <> showF 3 y <> ")"
 
 mWhen :: (Monoid m) => Bool -> m -> m
 mWhen b m = if b then m else mempty
+
