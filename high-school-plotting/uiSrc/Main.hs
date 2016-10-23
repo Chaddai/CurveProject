@@ -1,7 +1,8 @@
 {-# LANGUAGE ScopedTypeVariables, RecordWildCards, NamedFieldPuns, ViewPatterns #-}
 module Main (main) where
 
-import Math.TikzGenerator
+import Math.CurveGenerator
+import qualified Math.TikzGenerator as T
 import qualified Math.SVGGenerator as S
 import qualified Math.PSTricksGenerator as P
 
@@ -9,9 +10,7 @@ import qualified Math.PSTricksGenerator as P
 import Control.Monad (void, replicateM, liftM, liftM2, liftM3, zipWithM, zipWithM_)
 import Text.Read (readMaybe)
 import Data.Maybe
-import Data.Ord
 import Data.List
-import Data.Monoid
 import Data.Default
 import qualified Data.ByteString as B
 
@@ -31,7 +30,7 @@ import System.FilePath
 -- Gui Stuff !!
 import qualified Graphics.UI.Threepenny as UI
 import Graphics.UI.Threepenny.Core
--- import Paths_curve_generation_gui
+
 import Widgets
 {-----------------------------------------------------------------------------
 Enabled
@@ -57,7 +56,7 @@ setup home w = do
                        else return def
 
     (pointss, curveTikz, svgPanel, curvePstricks, axisPanel, gridPanel, tangentPanel, restoreAll)
-    	      <- makeCurves home w config
+          <- makeCurves home w config
 
     restoreAll config
 
@@ -67,7 +66,7 @@ setup home w = do
             ]
         params = UI.div ## "params" #+ [
           element axisPanel
-	  ,element gridPanel
+          ,element gridPanel
           ,element tangentPanel
           ,UI.div #. "paramsPanel" ## "LaTeXOutputs" #+ [
             collapsiblePanel "tikzCode"
@@ -110,14 +109,14 @@ makeCurves home w config@CGConfig{curveInputs} = do
           (\curves gOpts aOpts tOpts -> CGConfig (map (id &&& const def) curves) gOpts aOpts tOpts True)
           <$> curveIns <*> gridOptions <*> axisOptions <*> tangentOptions
 
-        tikzTotal = T.unpack . drawAll <$> configIn
+        tikzTotal = T.unpack . T.drawAll <$> configIn
 
         svgTotal = S.drawAll (mkWidth 873) <$> configIn
 
         pstricksTotal = T.unpack . P.drawAll <$> configIn
         restoreCurves CGConfig{curveInputs} =
           zipWithM_ (\(curveInput,_) xys -> restorePoints curveInput xys) curveInputs xyss
-        restoreAll config = sequence_ . map ($ config) $ [restoreTangents, restoreGrid, restoreAxis, restoreCurves]
+        restoreAll config = mapM_ ($ config) [restoreTangents, restoreGrid, restoreAxis, restoreCurves]
 
 
     UI.onEvent (disconnect w)
@@ -310,16 +309,19 @@ erasePoint ((x,y),t,b) = do
   void $ element b # set UI.checked False
 -------------------------
 
+readDef :: (Read r) => r -> String -> r
+readDef defaultValue = fromMaybe defaultValue . readMaybe
 
-readDef def = fromMaybe def . readMaybe
-
+coord, checkTangent :: UI Element
 coord = UI.input #. "coords"
 checkTangent = UI.input # set UI.type_ "checkbox" #. "coords"
+header :: String -> UI Element
 header str = string str #. "header"
 
 fst3 (a,_,_) = a
 snd3 (_,b,_) = b
 thrd3 (_,_,c) = c
+noZero :: Double -> Double
 noZero n
   | n >= -0.01 && n <= 0.01 = 1
 noZero n = n

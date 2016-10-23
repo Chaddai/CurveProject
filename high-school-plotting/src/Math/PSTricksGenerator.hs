@@ -12,14 +12,11 @@ import Math.GeneratorTools
 
 import Data.Text.Lazy (Text)
 import Data.Text.Lazy.Builder
-import Data.Text.Lazy.Builder.RealFloat
 import Data.Text.Lazy.Builder.Int
 import Data.Monoid
-import Text.Printf
-import Data.List
 
 import Diagrams.Coordinates
-import Diagrams.Prelude (P2, (.-^), (.+^), origin)
+import Diagrams.Prelude ((.-^), (.+^))
 import Linear.Vector
 import Linear.Metric
 

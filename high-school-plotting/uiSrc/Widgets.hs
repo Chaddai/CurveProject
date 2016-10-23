@@ -3,34 +3,32 @@ module Widgets where
 import Graphics.UI.Threepenny.Core
 import qualified Graphics.UI.Threepenny as UI
 
-import Control.Applicative
-import Control.Monad (void, mapM, zipWithM_)
+import Control.Monad (mapM, zipWithM_)
 
 collapsiblePanel :: String -> UI Element -> String -> [UI Element] -> UI Element
 collapsiblePanel ident titleLevel title contents = do
   toggle <- string "+" #. "toggleCollapse"
   collapsingSection <- UI.div #. "collapsible" # set style [("display","none")]
   flipFlop <- UI.accumE True (not <$ UI.click toggle)
-  onEvent flipFlop $ \showing -> do
-    stateToggle <- toggle # get text
-    case showing of
-      False -> do
-        element collapsingSection # set style [("display", "block")]
-        element toggle # set text "-"
-      True -> do
+  onEvent flipFlop $ \showing ->
+    if showing
+      then do
         element collapsingSection # set style [("display", "none")]
         element toggle # set text "+"
+      else do
+        element collapsingSection # set style [("display", "block")]
+        element toggle # set text "-"
   UI.div #+ [
     titleLevel #+ [element toggle, string title]
     ,element collapsingSection ## ident #+ contents
     ]
-  
+
 tabbedPanel :: Int -> String -> [(UI Element,[UI Element])] -> UI Element
 tabbedPanel width ident tabs = do
   let (titles, contents) = unzip tabs
       tabCount = length tabs
       -- 6px for paddings, 2px for margins, 2px for borders, 2 more for spaces ?
-      tabWidth = ((width `div` tabCount) - 12) 
+      tabWidth = (width `div` tabCount) - 12
   container <- UI.div #. "tabbedContainer" ## ident
   activeTitles <-
     mapM (\t -> UI.li #. "tab" # set UI.style [("width",show tabWidth  ++ "px")] #+ [t]) titles
@@ -52,11 +50,13 @@ tabbedPanel width ident tabs = do
       : map element activeContents
     )
 
+deleteIndex :: Int -> [a] -> [a]
 deleteIndex _ [] = []
-deleteIndex 0 (x:xs) = xs
+deleteIndex 0 (_:xs) = xs
 deleteIndex n xs'@(x:xs)
   | n < 0 = xs'
   | otherwise = x : deleteIndex (n-1) xs
 
 infixl 8 ##
+(##) :: UI Element -> String -> UI Element
 e ## ident = e # set UI.id_ ident

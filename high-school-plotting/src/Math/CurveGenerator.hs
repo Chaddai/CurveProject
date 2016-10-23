@@ -14,11 +14,10 @@ module Math.CurveGenerator
        , createCurve) where
 
 import Diagrams.Prelude
-import Diagrams.Coordinates
 
 import Data.Maybe
 import Data.SafeCopy
-import Data.Default
+import Data.Default()
 import Data.ByteString (ByteString)
 import Data.Serialize
 
@@ -44,7 +43,7 @@ deriveSafeCopy 1 'base ''GridOptions
 
 data AxisOptions = AxisOpts { xMin, xMax, yMin, yMax, xOrig, yOrig, xTicks, yTicks :: Double }
 instance Default AxisOptions where
-  def = AxisOpts { xMin=(-8), xMax=8, yMin=(-6), yMax=6, xTicks=1, yTicks=1, xOrig=0, yOrig=0 } 
+  def = AxisOpts { xMin= -8, xMax=8, yMin= -6, yMax=6, xTicks=1, yTicks=1, xOrig=0, yOrig=0 }
 deriveSafeCopy 1 'base ''AxisOptions
 
 data TangentsOptions = TanOpts { tangentLen :: Double, tangentColor :: String, tangentStyle :: String }
@@ -71,12 +70,13 @@ loadConfig = runGet safeGet
 data PointInfo = Through { piPoint :: P2 Double, tangent :: V2 Double, drawTangent :: Bool } | Control { piPoint :: P2 Double }
 
 data Curve = BezierJoints [PointInfo]
+           | SymbolFunction String
 
 drawingTangent :: PointInfo -> Bool
 drawingTangent (Through _ _ True) = True
 drawingTangent _ = False
 
-createCurve :: CurveInput -> Curve 
+createCurve :: CurveInput -> Curve
 createCurve (CurvePointsAndT e params@((lextr,t, b):(p2,_,_):ps)) = BezierJoints $ Through lextr dv b : Control clextr : go params
   where
     dv = computeDVector (centralSymAbout lextr p2) lextr p2 t
@@ -97,7 +97,7 @@ computeDVector (coords -> lx :& ly) (coords -> mx :& my) (coords -> rx :& ry) gi
   | (ly - my)*(ry - my) > 0 && isNothing givenT = x ^& 0
   | otherwise                                  = x ^& y
   where
-    t = fromMaybe ((ly-ry)/(lx-rx)) givenT 
+    t = fromMaybe ((ly-ry)/(lx-rx)) givenT
     x = min (mx - lx) (rx - mx)
     y = t*x
 
