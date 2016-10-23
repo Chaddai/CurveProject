@@ -7,7 +7,7 @@ module Math.SVGGenerator (module Math.CurveGenerator
                           , drawCurve
                           , drawTangents
                           , renderSvg
-                          , SizeSpec(..)) where
+                          , SizeSpec) where
 
 import Math.CurveGenerator
 import Math.GeneratorTools
@@ -20,12 +20,9 @@ import Linear.Vector
 
 import Diagrams.TwoD.Arrow
 import Diagrams.Prelude
-import Diagrams.Core.Types
 
 import Diagrams.Backend.SVG (SVG(..), Options(..))
 import Graphics.Svg (prettyText)
-
-import Control.Lens ((^.))
 
 import Data.Maybe
 import Text.Printf
@@ -51,18 +48,17 @@ drawAxis CGConfig{axisOptions=AxisOpts {..}} =
             <> ticks (xOrig ^& yMin) (xOrig ^& yMax) (xOrig ^& 0)
                 yMin yMax yOrig yTicks (-0.5)
 
-axis p1 p2 = arrowBetween' (with & arrowHead .~ spike
+axis p p' = arrowBetween' (with & arrowHead .~ spike
                                  & lengths .~ verySmall)
-                            p1 p2
+                            p p'
 
 ticks :: P2 Double -> P2 Double -> P2 Double -> Double -> Double -> Double -> Double -> Double -> Diagram SVG
-ticks p1 p2 myOrigin cmin cmax corig space dist =
-  mconcat . map drawTick . filter inRange $
+ticks p p' myOrigin cmin cmax corig space dist =
+  mconcat . map drawTick . filter (inRange cmin cmax) $
     [corig+space, corig+2*space..cmax]
     ++ [corig-space, corig-2*space..cmin]
   where
-    inRange x = cmin < x && x < cmax
-    v = normalize (p2 .-. p1)
+    v = normalize (p' .-. p)
     pv = perp v
     drawTick c =
       ((tCenter .-^ 0.2 *^ pv) ~~ (tCenter .+^ 0.2 *^ pv))
@@ -85,11 +81,11 @@ grid CGConfig{axisOptions=AxisOpts{..}} dx dy =
 drawCurve :: Int -> CurveOptions -> Curve -> Diagram SVG
 drawCurve i CurveOpts{..} (BezierJoints (map piPoint -> ps@(_:_:_))) =
   lw thin . lc (colourFrom curveColor) . dashPatternFrom curveStyle
-  . fromLocSegments . (`at` p1) . go $ ps
+  . fromLocSegments . (`at` p) . go $ ps
   where
-    p1 = fromMaybe origin $ listToMaybe ps
-    go (p1 : c1 : c2 : p2 : ps) =
-      bezier3 (c1 .-. p1) (c2 .-. p1) (p2 .-. p1) : go (p2:ps)
+    p = fromMaybe origin $ listToMaybe ps
+    go (p : c1 : c2 : p' : ps) =
+      bezier3 (c1 .-. p) (c2 .-. p) (p' .-. p) : go (p':ps)
     go _ = []
 drawCurve _ _ _ = mempty
 
@@ -106,12 +102,13 @@ drawTangents i CGConfig{tangentsOptions=TanOpts {..}} (BezierJoints pts) =
     go [] = mempty
     tColour = colourFrom tangentColor
 
-tangentLine p1 p2 c d = arrowBetween' (with & arrowHead .~ spike
+tangentLine p p' c d = arrowBetween' (with & arrowHead .~ spike
                                             & arrowTail .~ spike'
                                             & lengths .~ verySmall)
-                                      p1 p2 # d # lw veryThin # lc c # fc c
+                                      p p' # d # lw veryThin # lc c # fc c
 
-colourFrom c = fromMaybe black . readColourName $ c
+colourFrom :: String -> Colour Double
+colourFrom = fromMaybe black . readColourName
 dashPatternFrom s = case s of
   "solid" -> dashing [] (local 0)
   "dashed" -> dashing [verySmall, tiny] (local 0)
