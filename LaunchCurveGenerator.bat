@@ -1,2 +1,2 @@
-start http://localhost:10000
+start http://localhost:51333
 curveWebUI .
