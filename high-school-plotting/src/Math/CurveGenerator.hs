@@ -21,35 +21,42 @@ import Data.Default()
 import Data.ByteString (ByteString)
 import Data.Serialize
 
+import Lens.Simple
+
 -- All major input types and the configuration that holds them all
 data CurveInput = CurvePointsAndT { looseness :: Double, pointsWithT :: [(P2 Double, Maybe Double, Bool)] }
-                  | CurveFunction { func :: String, wantTangents :: [Double] }
+--                  | CurveFunction { func :: String, wantTangents :: [Double] }
 instance Default CurveInput where
   def = CurvePointsAndT { looseness=0.4, pointsWithT=[] }
 instance SafeCopy (P2 Double) where
   putCopy (coords -> x :& y) = contain $ safePut x >> safePut y
   getCopy = contain $ curry p2 <$> safeGet <*> safeGet
 deriveSafeCopy 1 'base ''CurveInput
+makeLensesBy (\n -> Just (n ++ "L")) ''CurveInput
 
 data CurveOptions = CurveOpts { curveColor :: String, curveStyle :: String }
 instance Default CurveOptions where
   def = CurveOpts { curveColor="black", curveStyle="solid" } -- Allowed curveStyle : solid, dashed, dotted
 deriveSafeCopy 1 'base ''CurveOptions
+makeLensesBy (\n -> Just (n ++ "L")) ''CurveOptions
 
 data GridOptions = GridOpts { dxMajor, dyMajor, dxMinor, dyMinor :: Double, majorGrid, minorGrid :: Bool }
 instance Default GridOptions where
   def = GridOpts 1 1 0.2 0.2 True False
 deriveSafeCopy 1 'base ''GridOptions
+makeLensesBy (\n -> Just (n ++ "L")) ''GridOptions
 
 data AxisOptions = AxisOpts { xMin, xMax, yMin, yMax, xOrig, yOrig, xTicks, yTicks :: Double }
 instance Default AxisOptions where
   def = AxisOpts { xMin= -8, xMax=8, yMin= -6, yMax=6, xTicks=1, yTicks=1, xOrig=0, yOrig=0 }
 deriveSafeCopy 1 'base ''AxisOptions
+makeLensesBy (\n -> Just (n ++ "L")) ''AxisOptions
 
 data TangentsOptions = TanOpts { tangentLen :: Double, tangentColor :: String, tangentStyle :: String }
 instance Default TangentsOptions where
   def = TanOpts { tangentLen = 2, tangentColor = "black", tangentStyle = "solid" }
 deriveSafeCopy 1 'base ''TangentsOptions
+makeLensesBy (\n -> Just (n ++ "L")) ''TangentsOptions
 
 data CGConfig = CGConfig { curveInputs :: [(CurveInput, CurveOptions)]
                      , gridOptions :: GridOptions
@@ -60,6 +67,7 @@ data CGConfig = CGConfig { curveInputs :: [(CurveInput, CurveOptions)]
 instance Default CGConfig where
   def = CGConfig (replicate 10 (def,def)) def def def False
 deriveSafeCopy 1 'base ''CGConfig
+makeLensesBy (\n -> Just (n ++ "L")) ''CGConfig
 
 saveConfig :: CGConfig -> ByteString
 saveConfig = runPut . safePut

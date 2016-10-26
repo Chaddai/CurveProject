@@ -29,7 +29,7 @@ library
                        , directory >= 1.2
                        , bytestring >= 0.10
                        , cereal >= 0.4
-                       , lens >= 4.4
+                       , lens-simple
                        , linear
                        , lucid
   hs-source-dirs:      src
@@ -53,7 +53,7 @@ executable curveWebUI
                      , directory >= 1.2
                      , bytestring >= 0.10
                      , cereal >= 0.4
-                     , lens >= 4.4
+                     , lens-simple
                      , linear
                      , lucid
                      , threepenny-gui >= 0.5

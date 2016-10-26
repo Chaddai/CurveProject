@@ -13,6 +13,7 @@ import Data.Maybe
 import Data.List
 import Data.Default
 import qualified Data.ByteString as B
+import qualified Data.ByteString.Char8 as C8
 
 import qualified Data.Traversable as T
 import qualified Data.Text.Lazy as T
@@ -51,48 +52,24 @@ setup home w = do
     let autosave =  home </> "autosave.session"
     b <- liftIO $ doesFileExist autosave
     config <- liftIO $ if b
-                       then liftM (either (const def) id . loadConfig)
-                            $ B.readFile autosave
+                       then (either (const def) id . loadConfig) <$> B.readFile autosave
                        else return def
 
-    (pointss, curveTikz, svgPanel, curvePstricks, axisPanel, gridPanel, tangentPanel, restoreAll)
-          <- makeCurves home w config
+    (curveUI, postprocess) <- makeCurves home w config
 
-    restoreAll config
-
-    let curveInput =
-          UI.div ## "curves" #+ [
-            tabbedPanel 1270 "tabsStuff" (zipWith curveTab [1..] pointss)
-            ]
-        params = UI.div ## "params" #+ [
-          element axisPanel
-          ,element gridPanel
-          ,element tangentPanel
-          ,UI.div #. "paramsPanel" ## "LaTeXOutputs" #+ [
-            collapsiblePanel "tikzCode"
-            UI.h3 "code Tikz :"
-            [element curveTikz]
-            ,collapsiblePanel "pstricksCode"
-             UI.h3 "code PsTricks :"
-             [element curvePstricks]
-            ]
-          ]
-        svgOutput = element svgPanel
-
-    getBody w #+ [UI.div ## "application" #+ [
+    
+    getBody w #+ [UI.div ## "application" #+ ([
                      UI.h1 # set text "Générateur de courbe point à point"
-                     , curveInput
-                     , params
-                     , svgOutput
-                     ]
+                     ] ++ curveUI)
                  ]
+    postprocess
     return ()
 
 
-makeCurves :: FilePath -> Window -> CGConfig -> UI ( [[((Element,Element),Element,Element)]], Element, Element, Element, Element, Element, Element, CGConfig -> UI () )
+makeCurves :: FilePath -> Window -> CGConfig -> UI ([UI Element], UI ())
 makeCurves home w config@CGConfig{curveInputs} = do
     xyss <- replicateM 10
-             (replicateM 20 $ liftM3 (,,) (liftM2 (,) coord coord) coord checkTangent)
+             (replicateM 15 $ liftM3 (,,) (liftM2 (,) coord coord) coord checkTangent)
     xyInss <-
       T.sequenceA <$>
         zipWithM (\(curveInput,_) xys -> fmap T.sequenceA . sequence $ pointInputs curveInput xys)
@@ -118,9 +95,8 @@ makeCurves home w config@CGConfig{curveInputs} = do
           zipWithM_ (\(curveInput,_) xys -> restorePoints curveInput xys) curveInputs xyss
         restoreAll config = mapM_ ($ config) [restoreTangents, restoreGrid, restoreAxis, restoreCurves]
 
-
-    UI.onEvent (disconnect w)
-         (const . liftIO $ B.writeFile (home </> "autosave.session") . saveConfig =<< currentValue configIn)
+    restoreAll config
+    onChanges configIn $ \c -> liftIO $ B.writeFile (home </> "autosave.session") $ saveConfig c
 
 
     curveTikz <- UI.textarea #. "tikzOutput" # set UI.rows "10"
@@ -128,13 +104,46 @@ makeCurves home w config@CGConfig{curveInputs} = do
     element curveTikz # sink value tikzTotal
 
     element curveSvg # sink html (T.unpack <$> svgTotal)
-    onChanges svgTotal (liftIO . T.writeFile (home </> "courbe.svg"))
+    onChanges svgTotal $ liftIO . T.writeFile (home </> "courbe.svg")
 
     curvePstricks <- UI.textarea #. "pstricksOutput" # set UI.rows "10"
                    # set UI.cols "60" # set (attr "readonly") "true"
     element curvePstricks # sink value pstricksTotal
 
-    return (xyss, curveTikz, svgPanel, curvePstricks, axisPanel, gridPanel, tangentPanel, restoreAll)
+    saveButton <- UI.a # set UI.href "/static/autosave.session"  # set UI.target "_blank" #+ [ UI.button #+ [UI.string "Sauvegarder"] ]
+    (loadButton, installHandler) <- uploadButton
+    resetButton <- UI.button #+ [UI.string "Remettre à zéro"]
+
+    on UI.click resetButton $ const $ restoreAll def
+
+    let sessionManagement = UI.div ## "sessions" #+ [
+          element saveButton
+          , element loadButton
+          , element resetButton
+          ]
+        curveInput =
+          UI.div ## "curves" #+ [
+            tabbedPanel 1270 "tabsStuff" (zipWith curveTab [1..] xyss)
+            ]
+        params = UI.div ## "params" #+ [
+          element axisPanel
+          ,element gridPanel
+          ,element tangentPanel
+          ,UI.div #. "paramsPanel" ## "LaTeXOutputs" #+ [
+            collapsiblePanel "tikzCode"
+            UI.h3 "code Tikz :"
+            [element curveTikz]
+            ,collapsiblePanel "pstricksCode"
+             UI.h3 "code PsTricks :"
+             [element curvePstricks]
+            ]
+          ]
+        svgOutput = element svgPanel
+        postprocess = do
+          installHandler (restoreAll . either (const def) id . loadConfig . C8.pack)
+
+
+    return ([sessionManagement, curveInput, params, svgOutput], postprocess)
 
 
 makeAxisPanel w config@CGConfig{axisOptions=AxisOpts{..}} = do
@@ -253,7 +262,7 @@ curveTab i points =
                ,UI.p # set text "Les points peuvent être entrés en désordre."
                ]
       ,UI.div #. "rightPanel" #+ [(grid . transpose $
-                                 [header "#", header "x", header "y", header "y'", header "Tracer la tangente ?"]
+                                 [header "#", header "x", header "y", header "y'", header "Tangente ?"]
                                  : zipWith arrangePoints [1..]  points) #. "tableDiv"
                                ]
       ]
