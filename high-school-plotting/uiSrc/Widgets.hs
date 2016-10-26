@@ -1,9 +1,14 @@
+{-# LANGUAGE QuasiQuotes #-}
+
 module Widgets where
 
 import Graphics.UI.Threepenny.Core
 import qualified Graphics.UI.Threepenny as UI
 
 import Control.Monad (mapM, zipWithM_)
+
+import qualified NeatInterpolation as N
+import qualified Data.Text as T
 
 collapsiblePanel :: String -> UI Element -> String -> [UI Element] -> UI Element
 collapsiblePanel ident titleLevel title contents = do
@@ -60,3 +65,28 @@ deleteIndex n xs'@(x:xs)
 infixl 8 ##
 (##) :: UI Element -> String -> UI Element
 e ## ident = e # set UI.id_ ident
+
+
+uploadButton :: UI (Element, (String -> UI a) -> UI ())
+uploadButton = do
+  fileIn <- UI.input # set UI.id_ "file" # set UI.type_ "file"
+  bIn <- stepper "Starting from NULL" $ UI.valueChange fileIn
+
+  let installHandler h = do
+        w <- UI.askWindow
+        handler <- UI.ffiExport (\s -> runUI w $ do
+                                    h s
+                                    return ()
+                                )
+        UI.runFunction (ffi onloadJS handler)
+  return (fileIn, installHandler)
+
+onloadJS = T.unpack [N.text|
+                    document.querySelector('#file').addEventListener('change', function() {
+                      var reader = new FileReader();
+                      reader.addEventListener('load', function() {
+                                                 %1(reader.result)
+                      });
+                      reader.readAsBinaryString(this.files[0]);
+                   });|]
+
